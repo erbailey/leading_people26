@@ -35,12 +35,13 @@ export async function POST(req: NextRequest) {
   }
 
   const anthropic = new Anthropic({ apiKey });
+  const studentTurnCount = messages.filter((m) => m.role === "user").length;
 
   try {
     const response = await anthropic.messages.create({
       model: "claude-sonnet-5",
       max_tokens: 400,
-      system: buildSystemPrompt(caseData, stage),
+      system: buildSystemPrompt(caseData, stage, studentTurnCount),
       messages: messages.map((m) => ({ role: m.role, content: m.content })),
     });
 
