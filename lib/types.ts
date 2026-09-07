@@ -10,6 +10,10 @@ export type Case = {
   title: string;
   source?: string;
   fullText: string;
+  /** Instructor-only: the analytical framework/theory this case is meant to teach.
+   *  Included in every stage's system prompt (not shown to students) so the model's
+   *  guidance stays grounded in the same lens throughout. */
+  framework?: string;
   stages: Stage[];
 };
 
