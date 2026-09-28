@@ -27,18 +27,38 @@ function getPublicCases(): Case[] {
  *   Vercel's 64KB per-variable limit once there were a handful of cases.
  *   Gzip first so there's real headroom as more cases get added.
  */
-function getPrivateCases(): Case[] {
+export type PrivateCasesStatus =
+  | { state: "unset" }
+  | { state: "error"; message: string; rawLength: number }
+  | { state: "ok"; count: number };
+
+function loadPrivateCases(): { cases: Case[]; status: PrivateCasesStatus } {
   const raw = process.env.PRIVATE_CASES_JSON;
-  if (!raw) return [];
+  if (!raw) return { cases: [], status: { state: "unset" } };
   try {
     const compressed = Buffer.from(raw, "base64");
     const decoded = zlib.gunzipSync(compressed).toString("utf-8");
     const parsed = JSON.parse(decoded);
-    return Array.isArray(parsed) ? parsed : [parsed];
-  } catch {
-    console.error("PRIVATE_CASES_JSON is set but could not be decoded as gzip+base64 JSON — ignoring it.");
-    return [];
+    const cases = Array.isArray(parsed) ? parsed : [parsed];
+    return { cases, status: { state: "ok", count: cases.length } };
+  } catch (err) {
+    return {
+      cases: [],
+      status: {
+        state: "error",
+        message: err instanceof Error ? err.message : String(err),
+        rawLength: raw.length,
+      },
+    };
   }
+}
+
+export function getPrivateCasesStatus(): PrivateCasesStatus {
+  return loadPrivateCases().status;
+}
+
+function getPrivateCases(): Case[] {
+  return loadPrivateCases().cases;
 }
 
 export function getAllCases(): Case[] {
