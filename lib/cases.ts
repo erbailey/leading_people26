@@ -6,6 +6,9 @@ import { Case } from "./types";
 const CASES_DIR = path.join(process.cwd(), "cases");
 
 function getPublicCases(): Case[] {
+  // git doesn't track empty directories, so /cases can be entirely absent
+  // from a deploy if every case file inside it has been removed.
+  if (!fs.existsSync(CASES_DIR)) return [];
   const files = fs.readdirSync(CASES_DIR).filter((f) => f.endsWith(".json"));
   return files.map(
     (f) => JSON.parse(fs.readFileSync(path.join(CASES_DIR, f), "utf-8")) as Case
