@@ -7,9 +7,17 @@ import { getAllCases, getPrivateCasesStatus } from "@/lib/cases";
 // was last updated.
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const cases = getAllCases();
   const privateStatus = getPrivateCasesStatus();
+  // Visit /?debug=1 to see this — hidden from students by default so a
+  // broken env var shows up as "fewer cases than expected," not a scary
+  // banner, while still being diagnosable when we need to check it.
+  const debug = (await searchParams).debug === "1";
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
@@ -19,18 +27,18 @@ export default function Home() {
         the case for you, but it will push back on your thinking as you go.
       </p>
 
-      {privateStatus.state === "unset" && (
+      {debug && privateStatus.state === "unset" && (
         <p className="mt-6 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
           Diagnostic: PRIVATE_CASES_JSON is not set in this deployment&apos;s environment.
         </p>
       )}
-      {privateStatus.state === "error" && (
+      {debug && privateStatus.state === "error" && (
         <p className="mt-6 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">
           Diagnostic: PRIVATE_CASES_JSON is set ({privateStatus.rawLength} characters) but failed
           to decode: {privateStatus.message}
         </p>
       )}
-      {privateStatus.state === "ok" && (
+      {debug && privateStatus.state === "ok" && (
         <p className="mt-6 rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
           Diagnostic: PRIVATE_CASES_JSON loaded {privateStatus.count} case
           {privateStatus.count === 1 ? "" : "s"} successfully.
